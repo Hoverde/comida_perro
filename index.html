@@ -3,12 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gandolas - Comida Natural para Perros y Gatos</title>
+    <title>AnimalPet - Comida Natural para Perros y Gatos</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-        :root{--emerald-50:#ecfdf5;--emerald-100:#d1fae5;--emerald-500:#10b981;--emerald-600:#059669;--emerald-700:#047857;--gray-50:#f9fafb;--gray-100:#f3f4f6;--gray-200:#e5e7eb;--gray-300:#d1d5db;--gray-400:#9ca3af;--gray-500:#6b7280;--gray-600:#4b5563;--gray-700:#374151;--gray-800:#1f2937;--gray-900:#111827;--white:#fff;--red-100:#fee2e2;--red-600:#dc2626;--red-700:#b91c1c;--red-800:#991b1b;--yellow-100:#fef3c7;--yellow-800:#92400e;--orange-100:#ffedd5;--orange-800:#9a3412;--purple-100:#f3e8ff;--purple-800:#6b21a8;--blue-100:#dbeafe;--blue-700:#1d4ed8;--green-100:#dcfce7;--green-700:#15803d;--amber-100:#fef3c7;--amber-600:#d97706;--indigo-100:#e0e7ff;--indigo-700:#4338ca;--radius:0.5rem}
-        body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--gray-50);color:var(--gray-900);line-height:1.5;min-height:100vh}
+        :root{--emerald-50:#ecfdf5;--emerald-100:#d1fae5;--emerald-500:#10b981;--emerald-600:#059669;--emerald-700:#047857;--gray-50:#f9fafb;--gray-100:#f3f4f6;--gray-200:#e5e7eb;--gray-300:#d1d5db;--gray-400:#9ca3af;--gray-500:#6b7280;--gray-600:#4b5563;--gray-700:#374151;--gray-800:#1f2937;--gray-900:#111827;--white:#fff;--red-100:#fee2e2;--red-600:#dc2626;--red-700:#b91c1c;--red-800:#991b1b;--yellow-100:#fef3c7;--yellow-800:#92400e;--orange-10
         a{color:var(--emerald-600);text-decoration:none;cursor:pointer}
         button{cursor:pointer;font-family:inherit}
         input,select,textarea{font-family:inherit;font-size:0.875rem}
@@ -122,7 +121,7 @@
                 <div style="display:inline-flex;align-items:center;gap:0.75rem;margin-bottom:2rem">
                     <div style="width:56px;height:56px;border-radius:16px;background:linear-gradient(135deg,var(--emerald-500),var(--emerald-700));display:flex;align-items:center;justify-content:center;font-size:28px;">🐾</div>
                     <div style="text-align:left">
-                        <h1 style="font-size:1.5rem;font-weight:700;color:#111827">Gandolas</h1>
+                        <h1 style="font-size:1.5rem;font-weight:700;color:#111827">AnimalPet</h1>
                         <p style="font-size:0.8rem;color:#6b7280">Comida Natural para Perros y Gatos</p>
                     </div>
                 </div>
@@ -810,7 +809,7 @@ async function ensureClienteExists() {
                 <div style="margin-bottom:2rem;text-align:center">
                     <div style="display:inline-flex;align-items:center;gap:0.75rem">
                         <div style="width:56px;height:56px;border-radius:16px;background:linear-gradient(135deg,var(--emerald-500),var(--emerald-700));display:flex;align-items:center;justify-content:center;font-size:28px;">🐾</div>
-                        <div style="text-align:left"><h1 style="font-size:1.5rem;font-weight:700">Gandolas</h1><p style="font-size:0.8rem;color:var(--gray-500)">Comida Natural para Perros y Gatos</p></div>
+                        <div style="text-align:left"><h1 style="font-size:1.5rem;font-weight:700">AnimalPet</h1><p style="font-size:0.8rem;color:var(--gray-500)">Comida Natural para Perros y Gatos</p></div>
                     </div>
                 </div>
                 <div class="auth-card">
@@ -840,7 +839,7 @@ async function ensureClienteExists() {
                 <div class="header">
                     <div class="header-logo">
                         <div class="icon">🐾</div>
-                        <div><h1>Gandolas</h1><p>Hola, ${esc(name)} <span class="badge badge-blue" style="font-size:0.65rem;margin-left:4px;">👤 Cliente</span></p></div>
+                        <div><h1>AnimalPet</h1><p>Hola, ${esc(name)} <span class="badge badge-blue" style="font-size:0.65rem;margin-left:4px;">👤 Cliente</span></p></div>
                     </div>
                     <button class="btn btn-ghost btn-sm" onclick="logout()">🚪 Salir</button>
                 </div>
@@ -852,7 +851,7 @@ async function ensureClienteExists() {
                     </div>
                     <div id="tab-content">${renderClienteTab()}</div>
                 </div>
-                <div class="footer"><p>❤️ Gandolas — Comida Natural para Perros y Gatos ❤️</p></div>
+                <div class="footer"><p>❤️ AnimalPet — Comida Natural para Perros y Gatos ❤️</p></div>
             </div>`;
         }
 
@@ -988,7 +987,7 @@ async function ensureClienteExists() {
                 <div class="header">
                     <div class="header-logo">
                         <div class="icon">🐾</div>
-                        <div><h1>Gandolas Admin</h1><p><span class="admin-badge">🛡️ Administrador</span></p></div>
+                        <div><h1>AnimalPet Admin</h1><p><span class="admin-badge">🛡️ Administrador</span></p></div>
                     </div>
                     <div style="display:flex;gap:10px;align-items:center;">
                         <a href="admin_db/index.html" class="btn btn-outline btn-sm" style="text-decoration:none;">🗄️ Admin DB</a>
@@ -1002,7 +1001,7 @@ async function ensureClienteExists() {
                     </div>
                     <div id="tab-content">${state.tab === 'ventas' ? renderAdminVentas() : renderAdminReportes()}</div>
                 </div>
-                <div class="footer"><p>🛡️ Gandolas Admin — Panel de Administración</p></div>
+                <div class="footer"><p>🛡️ AnimalPet Admin — Panel de Administración</p></div>
             </div>`;
         }
 
@@ -1250,7 +1249,7 @@ async function ensureClienteExists() {
         // ═══════════════════════════════════════════════════════════════════
         //  INICIAR
         // ═══════════════════════════════════════════════════════════════════
-        console.log('🚀 Iniciando aplicación Gandolas...');
+        console.log('🚀 Iniciando aplicación AnimalPet...');
         initAuth();
     </script>
 </body>
