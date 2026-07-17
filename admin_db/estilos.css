@@ -193,24 +193,28 @@ header p {
     font-weight: bold;
     margin: 5px 0 0 0;
     background: linear-gradient(135deg, #00d4ff, #7b2ffc);
+    background-clip: text;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
 }
 
 #stat-pendientes .stat-number {
     background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+    background-clip: text;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
 }
 
 #stat-curso .stat-number {
     background: linear-gradient(135deg, #feca57, #f9a825);
+    background-clip: text;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
 }
 
 #stat-completados .stat-number {
     background: linear-gradient(135deg, #00b894, #00a86b);
+    background-clip: text;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
 }
