@@ -7,8 +7,40 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-        :root{--emerald-50:#ecfdf5;--emerald-100:#d1fae5;--emerald-500:#10b981;--emerald-600:#059669;--emerald-700:#047857;--gray-50:#f9fafb;--gray-100:#f3f4f6;--gray-200:#e5e7eb;--gray-300:#d1d5db;--gray-400:#9ca3af;--gray-500:#6b7280;--gray-600:#4b5563;--gray-700:#374151;--gray-800:#1f2937;--gray-900:#111827;--white:#fff;--red-100:#fee2e2;--red-600:#dc2626;--red-700:#b91c1c;--red-800:#991b1b;--yellow-100:#fef3c7;--yellow-800:#92400e;--orange-10
-        a{color:var(--emerald-600);text-decoration:none;cursor:pointer}
+        :root{
+            --emerald-50:#ecfdf5;
+            --emerald-100:#d1fae5;
+            --emerald-500:#10b981;
+            --emerald-600:#059669;
+            --emerald-700:#047857;
+            --gray-50:#f9fafb;
+            --gray-100:#f3f4f6;
+            --gray-200:#e5e7eb;
+            --gray-300:#d1d5db;
+            --gray-400:#9ca3af;
+            --gray-500:#6b7280;
+            --gray-600:#4b5563;
+            --gray-700:#374151;
+            --gray-800:#1f2937;
+            --gray-900:#111827;
+            --white:#fff;
+            --red-100:#fee2e2;
+            --red-600:#dc2626;
+            --red-700:#b91c1c;
+            --red-800:#991b1b;
+            --yellow-100:#fef3c7;
+            --yellow-800:#92400e;
+            --orange-100:#fed7aa;
+            --purple-100:#ede9fe;
+            --purple-800:#5b21b6;
+            --green-100:#d1fae5;
+            --green-700:#047857;
+            --blue-100:#dbeafe;
+            --blue-700:#1d4ed8;
+            --amber-100:#fef3c7;
+            --amber-600:#d97706;
+            --radius:0.75rem;
+        }
         button{cursor:pointer;font-family:inherit}
         input,select,textarea{font-family:inherit;font-size:0.875rem}
         .app{min-height:100vh;display:flex;flex-direction:column}
@@ -284,195 +316,164 @@
             }
         }
 
-        async function initAuth() {
-            console.log('🔍 Verificando sesión...');
-            try {
-                const { data: { session } } = await sb.auth.getSession();
-                console.log('📋 Sesión:', session ? 'Activa' : 'No hay sesión');
-                
-                if (session) {
-                    state.user = session.user;
-                    const role = await getUserRole(session.user.id, session.user.email);
-                    state.role = role;
-                    state.view = role === 'admin' ? 'admin' : 'cliente';
-                    
-                    if (state.role === 'admin') state.tab = 'ventas';
-                    
-                    console.log('👤 Usuario:', session.user.email, '| Rol:', state.role);
-                    
-                    if (state.role === 'cliente') await loadClienteData();
-                    if (state.role === 'admin') await loadAdminData();
-                }
-            } catch (err) {
-                console.error('❌ Error verificando sesión:', err);
+       async function initAuth() {
+    console.log('🔍 Verificando sesión...');
+    try {
+        const { data: { session } } = await sb.auth.getSession();
+        console.log('📋 Sesión:', session ? 'Activa' : 'No hay sesión');
+        
+        if (session) {
+            state.user = session.user;
+            
+            // Asegurar que el cliente existe
+            const clienteOk = await ensureClienteExists();
+            if (!clienteOk) {
+                console.warn('⚠️ No se pudo crear el perfil de cliente');
             }
             
-            render();
-        }
-
-        sb.auth.onAuthStateChange(async (event, session) => {
-            console.log('🔄 Cambio de estado auth:', event);
+            // Obtener el rol
+            const role = await getUserRole(session.user.id, session.user.email);
+            state.role = role;
+            state.view = role === 'admin' ? 'admin' : 'cliente';
             
-            if (session) {
-                state.user = session.user;
-                const role = await getUserRole(session.user.id, session.user.email);
-                state.role = role;
-                state.view = role === 'admin' ? 'admin' : 'cliente';
-                
-                if (state.role === 'admin') state.tab = 'ventas';
-                
-                console.log('👤 Sesión iniciada:', session.user.email, '| Rol:', state.role);
-                
-                if (state.role === 'cliente') await loadClienteData();
-                if (state.role === 'admin') await loadAdminData();
+            if (state.role === 'admin') {
+                state.tab = 'ventas';
+                await loadAdminData();
             } else {
-                state.user = null;
-                state.role = null;
-                state.view = 'auth';
                 state.tab = 'pedir';
-                console.log('👋 Sesión cerrada');
+                // ⭐ IMPORTANTE: Cargar los datos del cliente
+                await loadClienteData();
             }
             
-            render();
-        });
-
-        async function login(email, password) {
-            console.log('🔑 Intentando login:', email);
-            const { error } = await sb.auth.signInWithPassword({ email, password });
-            if (error) {
-                console.error('❌ Error login:', error.message);
-                return toast(error.message, 'error');
-            }
-            console.log('✅ Login exitoso');
+            console.log('👤 Usuario:', session.user.email, '| Rol:', state.role);
         }
+    } catch (err) {
+        console.error('❌ Error verificando sesión:', err);
+    }
+    
+    render();
+}
 
-        async function register(nombre, email, password, telefono, direccion) {
-    console.log('📝 Registrando usuario:', email);
+// ⭐ MEJORAR: Escuchar cambios de autenticación
+sb.auth.onAuthStateChange(async (event, session) => {
+    console.log('🔄 Cambio de estado auth:', event);
+    
+    if (session) {
+        state.user = session.user;
+        
+        // Asegurar que el cliente existe
+        const clienteOk = await ensureClienteExists();
+        if (!clienteOk) {
+            console.warn('⚠️ No se pudo crear el perfil de cliente');
+        }
+        
+        const role = await getUserRole(session.user.id, session.user.email);
+        state.role = role;
+        state.view = role === 'admin' ? 'admin' : 'cliente';
+        
+        if (state.role === 'admin') {
+            state.tab = 'ventas';
+            await loadAdminData();
+        } else {
+            state.tab = 'pedir';
+            // ⭐ IMPORTANTE: Cargar los datos del cliente
+            await loadClienteData();
+        }
+        
+        console.log('👤 Sesión iniciada:', session.user.email, '| Rol:', state.role);
+    } else {
+        state.user = null;
+        state.role = null;
+        state.view = 'auth';
+        state.tab = 'pedir';
+        state.mascotas = [];
+        state.pedidos = [];
+        console.log('👋 Sesión cerrada');
+    }
+    
+    render();
+});
+
+       async function login(email, password) {
+    console.log('🔑 Intentando login:', email);
     
     try {
-        // 1. Primero verificar si el email ya existe en clientes
-        const { data: clienteExistente, error: checkError } = await sbAdmin
-            .from('clientes')
-            .select('id, email')
-            .eq('email', email)
-            .maybeSingle();
-
-        // Si existe en clientes pero no en auth, eliminarlo primero
-        if (clienteExistente) {
-            console.log('⚠️ Email existe en clientes, verificando auth...');
-            const { data: authUser } = await sbAdmin.auth.admin.getUserById(clienteExistente.id);
-            
-            if (!authUser) {
-                // El usuario no existe en auth, eliminar de clientes
-                console.log('🗑️ Eliminando cliente huérfano:', clienteExistente.id);
-                await sbAdmin.from('clientes').delete().eq('id', clienteExistente.id);
-            } else {
-                // El usuario existe en auth, no se puede crear duplicado
-                return toast('Este email ya está registrado. Por favor, inicia sesión.', 'error');
-            }
-        }
-
-        // 2. Crear usuario en Auth
-        const { data: authUser, error: authErr } = await sbAdmin.auth.admin.createUser({
-            email,
-            password,
-            email_confirm: true,
-            user_metadata: { nombre, telefono, direccion }
+        // 1. Intentar iniciar sesión
+        const { data, error } = await sb.auth.signInWithPassword({ 
+            email, 
+            password 
         });
         
-        if (authErr) {
-            console.error('❌ Error creando auth user:', authErr);
-            return toast(authErr.message, 'error');
+        if (error) {
+            console.error('❌ Error login:', error.message);
+            toast(error.message, 'error');
+            return false;
         }
-
-        const userId = authUser.user.id;
-        console.log('✅ Auth user creado:', userId);
-
-        // 3. Crear perfil en profiles
-        const { error: profileErr } = await sbAdmin
-            .from('profiles')
-            .upsert([{
-                id: userId,
-                email: email,
-                role: 'user'
-            }], { onConflict: 'id' });
-
-        if (profileErr) {
-            console.error('❌ Error creando perfil:', profileErr);
-            await sbAdmin.auth.admin.deleteUser(userId);
-            return toast('Error al crear el perfil', 'error');
+        
+        console.log('✅ Login exitoso');
+        
+        // 2. Verificar que el usuario se haya establecido
+        if (!data.user) {
+            console.error('❌ No se recibió usuario después del login');
+            toast('Error al obtener datos del usuario', 'error');
+            return false;
         }
-
-        console.log('✅ Perfil creado con rol user');
-
-        // 4. Crear cliente (con manejo de duplicados)
-        const nuevoCliente = {
-            id: userId,
-            nombre_propietario: nombre,
-            email: email,
-            telefono: telefono || 'No especificado',
-            direccion: direccion || null,
-            rol: 'cliente'
-        };
-
-        // Intentar insertar, si falla por duplicado, hacer upsert
-        const { error: dbErr } = await sbAdmin
-            .from('clientes')
-            .insert([nuevoCliente]);
-
-        if (dbErr) {
-            console.error('❌ Error creando cliente:', dbErr);
-            
-            // Si es error de duplicado de email
-            if (dbErr.code === '23505') {
-                console.log('⚠️ Conflicto de email, intentando upsert...');
-                const { error: upsertErr } = await sbAdmin
-                    .from('clientes')
-                    .upsert([nuevoCliente], { 
-                        onConflict: 'email',
-                        ignoreDuplicates: false 
-                    });
-                    
-                if (upsertErr) {
-                    console.error('❌ Error en upsert:', upsertErr);
-                    // Si falla, intentar eliminar el registro conflictivo
-                    await sbAdmin.from('clientes').delete().eq('email', email);
-                    const { error: retryErr } = await sbAdmin
-                        .from('clientes')
-                        .insert([nuevoCliente]);
-                        
-                    if (retryErr) {
-                        console.error('❌ Error en reintento:', retryErr);
-                        await sbAdmin.from('profiles').delete().eq('id', userId);
-                        await sbAdmin.auth.admin.deleteUser(userId);
-                        return toast('Error al crear el cliente: ' + retryErr.message, 'error');
-                    }
-                }
-            } else {
-                // Otro tipo de error
-                await sbAdmin.from('profiles').delete().eq('id', userId);
-                await sbAdmin.auth.admin.deleteUser(userId);
-                return toast('Error al crear el cliente: ' + dbErr.message, 'error');
+        
+        // 3. Actualizar el estado del usuario
+        state.user = data.user;
+        console.log('👤 Usuario logueado:', state.user.email);
+        
+        // 4. Asegurar que el cliente existe en la base de datos
+        console.log('🔍 Verificando/creando cliente...');
+        const clienteOk = await ensureClienteExists();
+        
+        if (!clienteOk) {
+            console.error('❌ Error al asegurar la existencia del cliente');
+            toast('Error al configurar tu perfil. Intenta de nuevo.', 'error');
+            // Intentar una vez más con un enfoque más directo
+            const clienteDirecto = await ensureClienteExists();
+            if (!clienteDirecto) {
+                toast('No se pudo crear tu perfil. Contacta al administrador.', 'error');
+                return false;
             }
         }
-
-        console.log('✅ Cliente creado exitosamente');
-
-        // 5. Auto login
-        const { error: loginErr } = await sb.auth.signInWithPassword({ email, password });
-        if (loginErr) {
-            console.error('❌ Error auto-login:', loginErr);
-            return toast(loginErr.message, 'error');
+        
+        // 5. Obtener el rol del usuario
+        console.log('🔍 Obteniendo rol del usuario...');
+        const role = await getUserRole(state.user.id, state.user.email);
+        state.role = role;
+        console.log('👤 Rol:', state.role);
+        
+        // 6. Configurar la vista según el rol
+        if (state.role === 'admin') {
+            state.view = 'admin';
+            state.tab = 'ventas';
+            console.log('📊 Cargando datos de administrador...');
+            await loadAdminData();
+        } else {
+            state.view = 'cliente';
+            state.tab = 'pedir';
+            console.log('🐾 Cargando datos del cliente...');
+            await loadClienteData();
         }
         
-        console.log('✅ Registro completo y sesión iniciada');
-        toast('✅ Cuenta creada exitosamente');
+        // 7. Renderizar la interfaz
+        console.log('🎨 Renderizando interfaz...');
+        render();
+        
+        // 8. Mostrar mensaje de bienvenida
+        const nombre = state.user.user_metadata?.nombre || state.user.email;
+        toast(`👋 ¡Bienvenido ${nombre}!`, 'success');
+        
+        return true;
         
     } catch (err) {
-        console.error('❌ Error en register:', err);
-        toast('Error en el registro: ' + err.message, 'error');
+        console.error('❌ Error inesperado en login:', err);
+        toast('Error al iniciar sesión: ' + err.message, 'error');
+        return false;
     }
 }
+
 
 
 
@@ -615,25 +616,50 @@ async function ensureClienteExists() {
         // ═══════════════════════════════════════════════════════════════════
         //  API
         // ═══════════════════════════════════════════════════════════════════
-        async function loadClienteData() {
-            if (!state.user) return;
+       async function loadClienteData() {
+    if (!state.user) {
+        console.log('⚠️ No hay usuario, no se cargan datos');
+        return;
+    }
 
-            // Asegurar que el cliente existe
-    await ensureClienteExists();
-            
-            const uid = state.user.id;
-            console.log('📊 Cargando datos del cliente:', uid);
-            
-            const [mRes, pRes] = await Promise.all([
-                sbAdmin.from('mascotas').select('*').eq('cliente_id', uid).order('created_at', { ascending: false }),
-                sbAdmin.from('pedidos').select('*, mascota:mascotas(id,nombre,tipo,raza,peso_kg)').eq('cliente_id', uid).order('created_at', { ascending: false }),
-            ]);
-            
-            state.mascotas = mRes.data || [];
-            state.pedidos = pRes.data || [];
-            
-            console.log(`📊 Datos cargados: ${state.mascotas.length} mascotas, ${state.pedidos.length} pedidos`);
+    // Asegurar que el cliente existe
+    const clienteOk = await ensureClienteExists();
+    if (!clienteOk) {
+        console.error('❌ No se pudo asegurar la existencia del cliente');
+        toast('Error: No se pudo cargar tu perfil. Cierra sesión y vuelve a intentar.', 'error');
+        return;
+    }
+    
+    const uid = state.user.id;
+    console.log('📊 Cargando datos del cliente:', uid);
+    
+    try {
+        // Cargar mascotas y pedidos en paralelo
+        const [mRes, pRes] = await Promise.all([
+            sbAdmin.from('mascotas').select('*').eq('cliente_id', uid).order('created_at', { ascending: false }),
+            sbAdmin.from('pedidos').select('*, mascota:mascotas(id,nombre,tipo,raza,peso_kg)').eq('cliente_id', uid).order('created_at', { ascending: false }),
+        ]);
+        
+        state.mascotas = mRes.data || [];
+        state.pedidos = pRes.data || [];
+        
+        console.log(`📊 Datos cargados: ${state.mascotas.length} mascotas, ${state.pedidos.length} pedidos`);
+        
+        // Mostrar un mensaje si no hay datos
+        if (state.mascotas.length === 0 && state.pedidos.length === 0) {
+            console.log('📝 No hay datos aún para este cliente');
         }
+        
+        // ⭐ Forzar renderizado después de cargar datos
+        render();
+        
+    } catch (err) {
+        console.error('❌ Error cargando datos:', err);
+        state.mascotas = [];
+        state.pedidos = [];
+        render();
+    }
+}
 
         async function savePet(form) {
     // Asegurar que el cliente existe antes de crear la mascota
@@ -691,13 +717,65 @@ async function ensureClienteExists() {
 }
 
         async function deletePet(id) {
-            if (!confirm('¿Eliminar esta mascota?')) return;
-            const { error } = await sbAdmin.from('mascotas').delete().eq('id', id);
-            if (error) return toast(error.message, 'error');
-            toast('✅ Mascota eliminada');
-            await loadClienteData();
-            render();
+    if (!confirm('¿Eliminar esta mascota y todos sus pedidos?')) {
+        return;
+    }
+    
+    console.log('🗑️ Eliminando mascota:', id);
+    
+    try {
+        // 1. Eliminar pedidos primero
+        const { error: pedidosErr } = await sbAdmin
+            .from('pedidos')
+            .delete()
+            .eq('mascota_id', id);
+            
+        if (pedidosErr) {
+            console.error('❌ Error eliminando pedidos:', pedidosErr);
+            toast('Error eliminando pedidos: ' + pedidosErr.message, 'error');
+            return;
         }
+        
+        // 2. Verificar que los pedidos se eliminaron
+        const { data: pedidosRestantes } = await sbAdmin
+            .from('pedidos')
+            .select('id')
+            .eq('mascota_id', id);
+            
+        if (pedidosRestantes && pedidosRestantes.length > 0) {
+            console.log('⚠️ Aún hay pedidos, intentando eliminación forzada...');
+            // Eliminar uno por uno
+            for (const p of pedidosRestantes) {
+                await sbAdmin.from('pedidos').delete().eq('id', p.id);
+            }
+        }
+        
+        // 3. Eliminar la mascota
+        const { error: mascotaErr } = await sbAdmin
+            .from('mascotas')
+            .delete()
+            .eq('id', id);
+            
+        if (mascotaErr) {
+            console.error('❌ Error eliminando mascota:', mascotaErr);
+            toast('Error eliminando mascota: ' + mascotaErr.message, 'error');
+            return;
+        }
+        
+        // 4. Actualizar el estado local
+        state.mascotas = state.mascotas.filter(m => m.id !== id);
+        
+        // 5. Recargar datos
+        await loadClienteData();
+        render();
+        
+        toast('✅ Mascota eliminada correctamente', 'success');
+        
+    } catch (err) {
+        console.error('❌ Error:', err);
+        toast('Error al eliminar: ' + err.message, 'error');
+    }
+}
 
         async function placeOrder(form) {
             const { error } = await sbAdmin.from('pedidos').insert([{
